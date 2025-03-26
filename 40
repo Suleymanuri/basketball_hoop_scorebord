@@ -1,0 +1,51 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Mar 26 21:26:30 2025
+
+@author: suley
+"""
+
+import random
+
+def initializeVectors():
+    """ Rastgele vektör oluşturur. """
+    random.seed(10)  # Çıktıyı sabitlemek için
+    return [random.randint(2, 8), random.randint(2, 8)]
+
+def dotProduct(v1, v2):
+    """ İki vektörün skaler çarpımını hesaplar. """
+    return v1[0] * v2[0] + v1[1] * v2[1]
+
+def orthogonalization(v1, v2):
+    """ v2'yi v1'e dik hale getirir. """
+    dot_v1_v2 = dotProduct(v1, v2)
+    dot_v1_v1 = dotProduct(v1, v1)
+    scalar = dot_v1_v2 / dot_v1_v1
+    v2_orth = [v2[0] - v1[0] * scalar, v2[1] - v1[1] * scalar]
+    return v2_orth
+
+def check(v1, v2_orth):
+    """ v1 ve v2_orth'un skaler çarpımını kontrol eder. """
+    return abs(dotProduct(v1, v2_orth)) < 1e-6
+
+def main():
+    v1 = initializeVectors()
+    v2 = initializeVectors()
+    
+    print(f"Before Coordinates for V1 {v1}")
+    print(f"Before Coordinates for V2 {v2}")
+    
+    dot = dotProduct(v1, v2)
+    print(f"Dot Product: {dot}")
+    
+    v2_orth = orthogonalization(v1, v2)
+    print(f"After Coordinates for V1 {v1}")
+    print(f"After Coordinates for V2 {v2_orth}")
+    
+    if check(v1, v2_orth):
+        print("The process is correct")
+    else:
+        print("Something is wrong")
+
+
+main()
