@@ -1,0 +1,62 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+def getParameters():
+    NOP = int(input("Enter the number of points (NOP): "))
+    thresh = float(input("Enter the distance threshold (thresh): "))
+    K = int(input("Enter the number of neighbors (K): "))
+    return NOP, thresh, K
+
+def generatePointCloud(NOP):
+    points = np.random.randint(100, 201, size=(NOP, 3))
+    return points
+
+def findKNeighbors(points, K):
+    neighbors = {}
+    for i, point in enumerate(points):
+        distances = np.linalg.norm(points - point, axis=1)
+        sorted_indices = np.argsort(distances)
+        neighbors[i] = distances[sorted_indices[1:K+1]]  # Exclude itself
+    return neighbors
+
+def filterPC(points, neighbors_dict, thresh):
+    df = pd.DataFrame.from_dict(neighbors_dict, orient='index')
+    means = df.mean(axis=1)
+    mask = means.values <= thresh
+    inlier = points[mask]
+    outlier = points[~mask]
+    return inlier, outlier
+
+def saveToFile(inlier, outlier, name="SuleymanNuri_SAGIR"):
+    np.savetxt(f"point_cloud_inlier_{name}.csv", inlier, delimiter='-', fmt='%d')
+    np.savetxt(f"point_cloud_outlier_{name}.csv", outlier, delimiter='-', fmt='%d')
+
+def plotFilteredPoints(inlier_file, outlier_file):
+    inlier_df = pd.read_csv(inlier_file, delimiter='-', header=None, names=['i_x', 'i_y', 'i_z'])
+    outlier_df = pd.read_csv(outlier_file, delimiter='-', header=None, names=['o_x', 'o_y', 'o_z'])
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    ax.scatter(inlier_df['i_x'], inlier_df['i_y'], inlier_df['i_z'], c='red', label='Inliers')
+    ax.scatter(outlier_df['o_x'], outlier_df['o_y'], outlier_df['o_z'], c='green', label='Outliers')
+    
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.legend()
+    plt.show()
+
+def main():
+    global outlier,inlier,neighbors_dict
+    NOP, thresh, K = getParameters()
+    points = generatePointCloud(NOP)
+    neighbors_dict = findKNeighbors(points, K)
+    inlier, outlier = filterPC(points, neighbors_dict, thresh)
+    saveToFile(inlier, outlier)
+    plotFilteredPoints("point_cloud_inlier_SuleymanNuri_SAGIR.csv", "point_cloud_outlier_SuleymanNuri_SAGIR.csv")
+
+if __name__ == "__main__":
+    main()
