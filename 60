@@ -1,0 +1,100 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Mar 26 22:43:49 2025
+
+@author: suley
+"""
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+
+def generateBoundaries():
+    np.random.seed(50)
+    max_bound = np.random.randint(16, 20, 3)
+    min_bound = np.random.randint(2, 6, 3)
+    return max_bound, min_bound
+
+def generatePointCloud():
+   np.random.seed(50)
+   point_cloud = np.random.randint(0, 21, size=(15, 3))
+   return point_cloud
+    
+
+def convertPCToDataFrame(point_cloud):
+    df = pd.DataFrame({
+      'axis_1': point_cloud[:, 0],
+      'axis_2': point_cloud[:, 1],
+      'axis_3': point_cloud[:, 2]
+   })
+    return df
+
+def findIndicesOfInnerPoints(df, max_bound, min_bound):
+    mask = (df['axis_1'] >= min_bound[0]) & (df['axis_1'] <= max_bound[0]) & \
+           (df['axis_2'] >= min_bound[1]) & (df['axis_2'] <= max_bound[1]) & \
+           (df['axis_3'] >= min_bound[2]) & (df['axis_3'] <= max_bound[2])
+    inner_indices = df[mask].index.tolist()
+    return inner_indices
+
+def findPoints(point_cloud, indices):
+    inner = point_cloud[indices]
+    outer = np.delete(point_cloud, indices, axis=0)
+    
+    np.savetxt('inner_points_SuleymanNuri_SAGIR.csv', inner, delimiter='*', fmt='%d')
+    np.savetxt('outer_points_SuleymanNuri_SAGIR.csv', outer, delimiter='*', fmt='%d')
+    return inner, outer
+
+def plotFilteredPoints(point_cloud, inner_file, outer_file):
+    inner_points = np.loadtxt(inner_file, delimiter='*')
+    outer_points = np.loadtxt(outer_file, delimiter='*')
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    ax.scatter(inner_points[:, 0], inner_points[:, 1], inner_points[:, 2], 
+              c='red', marker='o', label='Inner Points')
+    
+    ax.scatter(outer_points[:, 0], outer_points[:, 1], outer_points[:, 2], 
+              c='green', marker='o', label='Outer Points')
+    
+    for i, point in enumerate(point_cloud):
+        ax.text(point[0], point[1], point[2], str(i))
+    
+    ax.set_xlabel('X Axis')
+    ax.set_ylabel('Y Axis')
+    ax.set_zlabel('Z Axis')
+    plt.legend()
+    plt.show()
+
+def main():
+    
+    global max_bound, min_bound, point_cloud, df, inner_points, outer_points
+    max_bound, min_bound = generateBoundaries()
+    print("max_bound:", max_bound)
+    print("min_bound:", min_bound)
+    
+    point_cloud = generatePointCloud()
+    print("\nPoint Cloud:")
+    print(point_cloud)
+    
+    np.savetxt('point_cloud_SuleymanNuri_SAGIR.csv', point_cloud, delimiter='*', fmt='%d')
+    
+    df = convertPCToDataFrame(point_cloud)
+    print("\nDataFrame:")
+    print(df)
+    
+    inner_indices = findIndicesOfInnerPoints(df, max_bound, min_bound)
+    print("\nInner indices:", inner_indices)
+    
+    inner_points, outer_points = findPoints(point_cloud, inner_indices)
+    print("\nInner points:")
+    print(inner_points)
+    print("\nOuter points:")
+    print(outer_points)
+    
+    plotFilteredPoints(point_cloud,'inner_points_SuleymanNuri_SAGIR.csv','outer_points_SuleymanNuri_SAGIR.csv')
+
+    
+main()
+
