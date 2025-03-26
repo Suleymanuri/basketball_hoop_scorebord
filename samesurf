@@ -1,0 +1,79 @@
+import random
+import math
+
+thres = 5
+def initializeCoordinates(p1,p2,p3):
+    for _ in range(3):
+        p1.append(random.randint(7, 15))
+        p2.append(random.randint(7, 15))
+        p3.append(random.randint(7, 15))
+        
+def main():
+    
+    point1 = []
+    point2 = []
+    point3 = []
+    
+    initializeCoordinates(point1, point2, point3)
+    
+    print("Point 1:", point1)
+    print("Point 2:", point2)
+    print("Point 3:", point3)
+    
+    normal_vector = calculateNormals(point1, point2, point3)
+    print("\nNormal Vector:")
+    print(f"n = {normal_vector}")
+    
+    ang = calculateAngles(normal_vector)
+    
+    print(f"\nAngle X = {ang[0]:.2f},\nAngle Y = {ang[1]:.2f},\nAngle Z = {ang[2]:.2f}")
+    
+    
+    if isSameSurface(ang) == True:
+        print("same surface")
+    else:
+        print("not same surface")
+        
+def calculateNormals(p1,p2,p3):
+    # Extract x, y, z coordinates
+    x1, y1, z1 = p1
+    x2, y2, z2 = p2
+    x3, y3, z3 = p3
+    
+    # Calculate components using determinant method
+    nx = (y2 - y1) * (z3 - z1) - (z2 - z1) * (y3 - y1)
+    ny = (z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1)
+    nz = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)
+    
+   
+    return [nx, ny, nz]
+    
+    
+def calculateAngles(nv):
+    
+
+  nx, ny, nz = nv
+  magnitude = math.sqrt(nx**2 + ny**2 + nz**2)  # √(nx² + ny² + nz²)
+
+  if magnitude == 0:  # Bölme hatası önlemek için
+      raise ValueError("Normal vektör sıfır olamaz!")
+
+  angleX = math.degrees(math.acos(nx / magnitude))
+  angleY = math.degrees(math.acos(ny / magnitude))
+  angleZ = math.degrees(math.acos(nz / magnitude))
+
+  return [angleX, angleY, angleZ]
+
+def isSameSurface(ang):
+    ax, ay, az = ang
+    
+    if abs(ax-ay) < thres:
+        return True
+    elif abs(ax-az) < thres:
+        return True
+    elif abs(az-ay) < thres:
+        return True
+    else:
+        return False
+
+main()
