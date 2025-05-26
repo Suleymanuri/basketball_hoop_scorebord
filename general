@@ -1,0 +1,164 @@
+# ui_mainwindow.py
+
+from PyQt5.QtWidgets import (
+    QLabel, QTextEdit, QPushButton,
+    QRadioButton, QComboBox, QGridLayout, QWidget
+)
+
+class Ui_MainWindow(object):
+    def setupUi(self, Form):
+        Form.setWindowTitle("List Operations")
+        self.centralwidget = Form
+
+        self.label_numbers = QLabel("Numbers")
+        self.label_result = QLabel("Result")
+        self.label_status = QLabel("Status")
+
+        self.text_numbers = QTextEdit()
+        self.text_result = QTextEdit()
+        self.text_result.setReadOnly(True)
+
+        self.btn_generate = QPushButton("Generate Numbers")
+
+        self.radio_sum = QRadioButton("Sum")
+        self.radio_avg = QRadioButton("Average")
+        self.radio_sort = QRadioButton("Sort")
+        self.radio_max = QRadioButton("Max")
+
+        self.combo_sort = QComboBox()
+        self.combo_sort.addItems(["Ascending", "Descending"])
+        self.combo_sort.setEnabled(False)
+
+        layout = QGridLayout()
+        layout.addWidget(self.label_numbers, 0, 0)
+        layout.addWidget(self.text_numbers, 1, 0, 1, 2)
+        layout.addWidget(self.label_result, 0, 2)
+        layout.addWidget(self.text_result, 1, 2, 1, 2)
+
+        layout.addWidget(self.btn_generate, 2, 0)
+        layout.addWidget(self.radio_sum, 2, 1)
+        layout.addWidget(self.radio_avg, 2, 2)
+        layout.addWidget(self.radio_max, 2, 3)
+        layout.addWidget(self.radio_sort, 3, 0)
+        layout.addWidget(self.combo_sort, 3, 1)
+        layout.addWidget(self.label_status, 4, 0, 1, 4)
+
+        Form.setLayout(layout)
+
+
+
+
+
+
+# -*- coding: utf-8 -*-
+"""
+Created on Tue May 27 01:22:03 2025
+
+@author: suley
+"""
+
+# main.py
+
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
+from ui_mainwindow import Ui_MainWindow
+from list_logic import ListOperations
+
+class MainApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+
+        self.logic = ListOperations()
+
+        self.connect_signals()
+        self.disable_controls_at_start()
+
+    def connect_signals(self):
+        self.ui.btn_generate.clicked.connect(self.generate_numbers)
+
+        self.ui.radio_sum.toggled.connect(self.apply_operation)
+        self.ui.radio_avg.toggled.connect(self.apply_operation)
+        self.ui.radio_max.toggled.connect(self.apply_operation)
+        self.ui.radio_sort.toggled.connect(self.activate_sort)
+
+        self.ui.combo_sort.currentIndexChanged.connect(self.sort_numbers)
+
+    def disable_controls_at_start(self):
+        for btn in [self.ui.radio_sum, self.ui.radio_avg, self.ui.radio_sort, self.ui.radio_max]:
+            btn.setEnabled(False)
+
+    def generate_numbers(self):
+        numbers = self.logic.generate_numbers()
+        self.ui.text_numbers.setText(str(numbers))
+        for btn in [self.ui.radio_sum, self.ui.radio_avg, self.ui.radio_sort, self.ui.radio_max]:
+            btn.setEnabled(True)
+        self.ui.combo_sort.setEnabled(False)
+        self.ui.label_status.setText("Numbers are generated")
+
+    def apply_operation(self):
+        if not self.logic.numbers:
+            QMessageBox.warning(self, "Warning", "Please generate numbers first!")
+            return
+
+        if self.ui.radio_sum.isChecked():
+            result = self.logic.get_sum()
+            self.ui.text_result.setText(f"Sum: {result}")
+            self.ui.label_status.setText("Sum calculated.")
+        elif self.ui.radio_avg.isChecked():
+            result = self.logic.get_average()
+            self.ui.text_result.setText(f"Average: {result:.2f}")
+            self.ui.label_status.setText("Average calculated.")
+        elif self.ui.radio_max.isChecked():
+            result = self.logic.get_max()
+            self.ui.text_result.setText(f"Max: {result}")
+            self.ui.label_status.setText("Maximum found.")
+
+    def activate_sort(self):
+        if self.ui.radio_sort.isChecked():
+            self.ui.combo_sort.setEnabled(True)
+            self.ui.label_status.setText("Sort selected. Choose order from combo box.")
+
+    def sort_numbers(self):
+        if not self.ui.radio_sort.isChecked():
+            return
+        order = self.ui.combo_sort.currentText()
+        ascending = (order == "Ascending")
+        sorted_nums = self.logic.get_sorted(ascending)
+        self.ui.text_result.setText(str(sorted_nums))
+        self.ui.label_status.setText(f"Sorted in {order.lower()} order.")
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainApp()
+    window.resize(600, 400)
+    window.show()
+    sys.exit(app.exec_())
+
+
+
+
+# list_logic.py
+
+import random
+
+class ListOperations:
+    def __init__(self):
+        self.numbers = []
+
+    def generate_numbers(self, count=40, min_val=0, max_val=99):
+        self.numbers = [random.randint(min_val, max_val) for _ in range(count)]
+        return self.numbers
+
+    def get_sum(self):
+        return sum(self.numbers)
+
+    def get_average(self):
+        return sum(self.numbers) / len(self.numbers) if self.numbers else 0
+
+    def get_max(self):
+        return max(self.numbers) if self.numbers else None
+
+    def get_sorted(self, ascending=True):
+        return sorted(self.numbers, reverse=not ascending)
