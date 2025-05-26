@@ -1,100 +1,63 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Mar 26 22:43:49 2025
-
+Created on Mon May 26 11:39:36 2025
 @author: suley
 """
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 
+from PyQt5 import QtWidgets
+from prime import Ui_MainWindow  # importing our generated file
+import sys
 
+class MyWindow(QtWidgets.QMainWindow):
 
-def generateBoundaries():
-    np.random.seed(50)
-    max_bound = np.random.randint(16, 20, 3)
-    min_bound = np.random.randint(2, 6, 3)
-    return max_bound, min_bound
+    def __init__(self):
+        super(MyWindow, self).__init__()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
 
-def generatePointCloud():
-   np.random.seed(50)
-   point_cloud = np.random.randint(0, 21, size=(15, 3))
-   return point_cloud
-    
+        # Connect button
+        self.ui.pushButton.setText("RUN")
+        self.ui.pushButton.clicked.connect(self.handle_run)
 
-def convertPCToDataFrame(point_cloud):
-    df = pd.DataFrame({
-      'axis_1': point_cloud[:, 0],
-      'axis_2': point_cloud[:, 1],
-      'axis_3': point_cloud[:, 2]
-   })
-    return df
+    def handle_run(self):
+        input_text = self.ui.lineEdit_Number.text()
+        try:
+            number = int(input_text)
+            if number < 2:
+                raise ValueError("Number must be greater than 1")
 
-def findIndicesOfInnerPoints(df, max_bound, min_bound):
-    mask = (df['axis_1'] >= min_bound[0]) & (df['axis_1'] <= max_bound[0]) & \
-           (df['axis_2'] >= min_bound[1]) & (df['axis_2'] <= max_bound[1]) & \
-           (df['axis_3'] >= min_bound[2]) & (df['axis_3'] <= max_bound[2])
-    inner_indices = df[mask].index.tolist()
-    return inner_indices
+            primes = self.calculate_primes(number)
 
-def findPoints(point_cloud, indices):
-    inner = point_cloud[indices]
-    outer = np.delete(point_cloud, indices, axis=0)
-    
-    np.savetxt('inner_points_SuleymanNuri_SAGIR.csv', inner, delimiter='*', fmt='%d')
-    np.savetxt('outer_points_SuleymanNuri_SAGIR.csv', outer, delimiter='*', fmt='%d')
-    return inner, outer
+            selected_action = self.ui.comboBox.currentText()
+            if selected_action == "print the text box":
+                self.print_text_box(primes)
+                self.ui.label_Status.setText("Printed to text box.")
+            elif selected_action == "write the file":
+                self.print_file(primes)
+                self.ui.label_Status.setText("Written to file.")
+            else:
+                self.ui.label_Status.setText("Invalid selection.")
 
-def plotFilteredPoints(point_cloud, inner_file, outer_file):
-    inner_points = np.loadtxt(inner_file, delimiter='*')
-    outer_points = np.loadtxt(outer_file, delimiter='*')
-    
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    
-    ax.scatter(inner_points[:, 0], inner_points[:, 1], inner_points[:, 2], 
-              c='red', marker='o', label='Inner Points')
-    
-    ax.scatter(outer_points[:, 0], outer_points[:, 1], outer_points[:, 2], 
-              c='green', marker='o', label='Outer Points')
-    
-    for i, point in enumerate(point_cloud):
-        ax.text(point[0], point[1], point[2], str(i))
-    
-    ax.set_xlabel('X Axis')
-    ax.set_ylabel('Y Axis')
-    ax.set_zlabel('Z Axis')
-    plt.legend()
-    plt.show()
+        except ValueError:
+            self.ui.label_Status.setText("Please enter a valid positive integer.")
 
-def main():
-    
-    global max_bound, min_bound, point_cloud, df, inner_points, outer_points
-    max_bound, min_bound = generateBoundaries()
-    print("max_bound:", max_bound)
-    print("min_bound:", min_bound)
-    
-    point_cloud = generatePointCloud()
-    print("\nPoint Cloud:")
-    print(point_cloud)
-    
-    np.savetxt('point_cloud_SuleymanNuri_SAGIR.csv', point_cloud, delimiter='*', fmt='%d')
-    
-    df = convertPCToDataFrame(point_cloud)
-    print("\nDataFrame:")
-    print(df)
-    
-    inner_indices = findIndicesOfInnerPoints(df, max_bound, min_bound)
-    print("\nInner indices:", inner_indices)
-    
-    inner_points, outer_points = findPoints(point_cloud, inner_indices)
-    print("\nInner points:")
-    print(inner_points)
-    print("\nOuter points:")
-    print(outer_points)
-    
-    plotFilteredPoints(point_cloud,'inner_points_SuleymanNuri_SAGIR.csv','outer_points_SuleymanNuri_SAGIR.csv')
+    def calculate_primes(self, limit):
+        primes = []
+        for num in range(2, limit + 1):
+            if all(num % i != 0 for i in range(2, int(num ** 0.5) + 1)):
+                primes.append(num)
+        return primes
 
-    
-main()
+    def print_text_box(self, primes):
+        self.ui.textEdit_Results.clear()
+        self.ui.textEdit_Results.append(", ".join(map(str, primes)))
 
+    def print_file(self, primes):
+        with open("prime_numbers.txt", "w") as file:
+            file.write(", ".join(map(str, primes)))
+
+# Run app
+app = QtWidgets.QApplication(sys.argv)
+application = MyWindow()
+application.show()
+sys.exit(app.exec())
