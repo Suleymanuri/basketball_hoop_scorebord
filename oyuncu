@@ -1,0 +1,140 @@
+class Player:
+    def __init__(self, firstName, lastName, age, nation):
+        self.__firstName = firstName
+        self.__lastName = lastName
+        self.__age = age
+        self.__nation = nation
+
+    # Accessors (getters)
+    def get_firstName(self):
+        return self.__firstName
+
+    def get_lastName(self):
+        return self.__lastName
+
+    def get_age(self):
+        return self.__age
+
+    def get_nation(self):
+        return self.__nation
+
+    # Mutators (setters)
+    def set_firstName(self, firstName):
+        self.__firstName = firstName
+
+    def set_lastName(self, lastName):
+        self.__lastName = lastName
+
+    def set_age(self, age):
+        self.__age = age
+
+    def set_nation(self, nation):
+        self.__nation = nation
+
+    def print_player(self):
+        print("First Name:", self.get_firstName())
+        print("Last Name:", self.get_lastName())
+        print("Age:", self.get_age())
+        print("Nation:", self.get_nation())
+
+
+class LeaguePlayer(Player):
+    def __init__(self, firstName, lastName, age, nation, branch, game_num, win_num, lost_num, player_score):
+        super().__init__(firstName, lastName, age, nation)
+        self.__branch = branch
+        self.__game_num = game_num
+        self.__win_num = win_num
+        self.__lost_num = lost_num
+        self.__player_score = player_score
+
+    # Accessors
+    def get_branch(self):
+        return self.__branch
+
+    def get_game_num(self):
+        return self.__game_num
+
+    def get_win_num(self):
+        return self.__win_num
+
+    def get_lost_num(self):
+        return self.__lost_num
+
+    def get_player_score(self):
+        return self.__player_score
+
+    # Mutators
+    def set_branch(self, branch):
+        self.__branch = branch
+
+    def set_game_num(self, game_num):
+        self.__game_num = game_num
+
+    def set_win_num(self, win_num):
+        self.__win_num = win_num
+
+    def set_lost_num(self, lost_num):
+        self.__lost_num = lost_num
+
+    def set_player_score(self, player_score):
+        self.__player_score = player_score
+
+    def print_player(self):
+        super().print_player()
+        print("Branch:", self.get_branch())
+        print("Game Number:", self.get_game_num())
+        print("Win Number:", self.get_win_num())
+        print("Lost Number:", self.get_lost_num())
+        print("Player Score:", self.get_player_score())
+
+    def statistics(self):
+        stat = self.get_player_score() / self.get_game_num()
+        print("League Statistics:", stat)
+
+    def points(self):
+        pts = 10 * self.get_game_num() + 3 * self.get_win_num() - 2 * self.get_lost_num()
+        return pts
+
+
+class NationalPlayer(LeaguePlayer):
+    def __init__(self, firstName, lastName, age, nation, branch, game_num, win_num, lost_num, player_score,
+                 nationalGame_num, nationalPlayer_score):
+        super().__init__(firstName, lastName, age, nation, branch, game_num, win_num, lost_num, player_score)
+        self.__nationalGame_num = nationalGame_num
+        self.__nationalPlayer_score = nationalPlayer_score
+
+    # Accessors
+    def get_nationalGame_num(self):
+        return self.__nationalGame_num
+
+    def get_nationalPlayer_score(self):
+        return self.__nationalPlayer_score
+
+    # Mutators
+    def set_nationalGame_num(self, nationalGame_num):
+        self.__nationalGame_num = nationalGame_num
+
+    def set_nationalPlayer_score(self, nationalPlayer_score):
+        self.__nationalPlayer_score = nationalPlayer_score
+
+    def print_player(self):
+        super().print_player()
+        print("National Game Number:", self.get_nationalGame_num())
+        print("National Player Score:", self.get_nationalPlayer_score())
+
+    def statistics(self):
+        stat = self.get_nationalPlayer_score() / self.get_nationalGame_num()
+        print("National Statistics:", stat)
+
+    def points(self):
+        league_points = super().points()
+        national_points = 15 * self.get_nationalGame_num()
+        total_points = league_points + national_points
+        print("Total Points:", total_points)
+
+
+# Test
+player = NationalPlayer("Ali", "Kaya", 25, "Turkey", "Football", 20, 15, 5, 120, 10, 90)
+player.print_player()
+player.statistics()
+player.points()
