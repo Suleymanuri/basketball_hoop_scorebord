@@ -1,49 +1,80 @@
-# ui_mainwindow.py
+import sys
+import random
+from PyQt5 import QtWidgets
+from sort import Ui_MainWindow  # UI sınıfını buraya import ediyoruz
 
-from PyQt5.QtWidgets import (
-    QLabel, QTextEdit, QPushButton,
-    QRadioButton, QComboBox, QGridLayout, QWidget
-)
+class MyWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
 
-class Ui_MainWindow(object):
-    def setupUi(self, Form):
-        Form.setWindowTitle("List Operations")
-        self.centralwidget = Form
+        # Buton bağlantısı
+        self.ui.pushButton_GenerateNumbers.clicked.connect(self.generate_numbers)
 
-        self.label_numbers = QLabel("Numbers")
-        self.label_result = QLabel("Result")
-        self.label_status = QLabel("Status")
+        # RadioButton bağlantıları
+        self.ui.radioButton_Max.toggled.connect(self.apply_operation)
+        self.ui.radioButton_Min.toggled.connect(self.apply_operation)
+        self.ui.radioButton_Sort.toggled.connect(self.apply_operation)
+        self.ui.radioButton_Reverse.toggled.connect(self.apply_operation)
 
-        self.text_numbers = QTextEdit()
-        self.text_result = QTextEdit()
-        self.text_result.setReadOnly(True)
+        # ComboBox bağlantısı (Sıralama tipi değişince de işlemi uygula)
+        self.ui.comboBox.currentIndexChanged.connect(self.apply_operation)
 
-        self.btn_generate = QPushButton("Generate Numbers")
+    def generate_numbers(self):
+        numbers = [random.randint(0, 100) for _ in range(10)]
+        self.ui.textEdit_Numbers.setPlainText(" ".join(map(str, numbers)))
+        self.ui.textEdit_Result.clear()
+        self.ui.label_3.setText("Durum: Sayılar üretildi.")
 
-        self.radio_sum = QRadioButton("Sum")
-        self.radio_avg = QRadioButton("Average")
-        self.radio_sort = QRadioButton("Sort")
-        self.radio_max = QRadioButton("Max")
+    def get_numbers(self):
+        text = self.ui.textEdit_Numbers.toPlainText()
+        try:
+            numbers = list(map(int, text.strip().split()))
+            return numbers
+        except ValueError:
+            self.ui.label_3.setText("Durum: Geçersiz sayı formatı.")
+            return []
 
-        self.combo_sort = QComboBox()
-        self.combo_sort.addItems(["Ascending", "Descending"])
-        self.combo_sort.setEnabled(False)
+    def apply_operation(self):
+        numbers = self.get_numbers()
+        if not numbers:
+            return
 
-        layout = QGridLayout()
-        layout.addWidget(self.label_numbers, 0, 0)
-        layout.addWidget(self.text_numbers, 1, 0, 1, 2)
-        layout.addWidget(self.label_result, 0, 2)
-        layout.addWidget(self.text_result, 1, 2, 1, 2)
+        result = ""
 
-        layout.addWidget(self.btn_generate, 2, 0)
-        layout.addWidget(self.radio_sum, 2, 1)
-        layout.addWidget(self.radio_avg, 2, 2)
-        layout.addWidget(self.radio_max, 2, 3)
-        layout.addWidget(self.radio_sort, 3, 0)
-        layout.addWidget(self.combo_sort, 3, 1)
-        layout.addWidget(self.label_status, 4, 0, 1, 4)
+        if self.ui.radioButton_Max.isChecked():
+            result = str(max(numbers))
+            self.ui.label_3.setText("Durum: Max hesaplandı.")
 
-        Form.setLayout(layout)
+        elif self.ui.radioButton_Min.isChecked():
+            result = str(min(numbers))
+            self.ui.label_3.setText("Durum: Min hesaplandı.")
+
+        elif self.ui.radioButton_Sort.isChecked():
+            order = self.ui.comboBox.currentText()
+            if order == "Ascendic":
+                numbers.sort()
+            else:
+                numbers.sort(reverse=True)
+            result = " ".join(map(str, numbers))
+            self.ui.label_3.setText(f"Durum: {'Artan' if order == 'Ascendic' else 'Azalan'} sıralandı.")
+
+        elif self.ui.radioButton_Reverse.isChecked():
+            numbers.reverse()
+            result = " ".join(map(str, numbers))
+            self.ui.label_3.setText("Durum: Sıra tersine çevrildi.")
+
+        self.ui.textEdit_Result.setPlainText(result)
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    window = MyWindow()
+    window.show()
+    sys.exit(app.exec_())
+
+
 
 
 
@@ -51,114 +82,83 @@ class Ui_MainWindow(object):
 
 
 # -*- coding: utf-8 -*-
-"""
-Created on Tue May 27 01:22:03 2025
 
-@author: suley
-"""
-
-# main.py
-
-import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
-from ui_mainwindow import Ui_MainWindow
-from list_logic import ListOperations
-
-class MainApp(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
-
-        self.logic = ListOperations()
-
-        self.connect_signals()
-        self.disable_controls_at_start()
-
-    def connect_signals(self):
-        self.ui.btn_generate.clicked.connect(self.generate_numbers)
-
-        self.ui.radio_sum.toggled.connect(self.apply_operation)
-        self.ui.radio_avg.toggled.connect(self.apply_operation)
-        self.ui.radio_max.toggled.connect(self.apply_operation)
-        self.ui.radio_sort.toggled.connect(self.activate_sort)
-
-        self.ui.combo_sort.currentIndexChanged.connect(self.sort_numbers)
-
-    def disable_controls_at_start(self):
-        for btn in [self.ui.radio_sum, self.ui.radio_avg, self.ui.radio_sort, self.ui.radio_max]:
-            btn.setEnabled(False)
-
-    def generate_numbers(self):
-        numbers = self.logic.generate_numbers()
-        self.ui.text_numbers.setText(str(numbers))
-        for btn in [self.ui.radio_sum, self.ui.radio_avg, self.ui.radio_sort, self.ui.radio_max]:
-            btn.setEnabled(True)
-        self.ui.combo_sort.setEnabled(False)
-        self.ui.label_status.setText("Numbers are generated")
-
-    def apply_operation(self):
-        if not self.logic.numbers:
-            QMessageBox.warning(self, "Warning", "Please generate numbers first!")
-            return
-
-        if self.ui.radio_sum.isChecked():
-            result = self.logic.get_sum()
-            self.ui.text_result.setText(f"Sum: {result}")
-            self.ui.label_status.setText("Sum calculated.")
-        elif self.ui.radio_avg.isChecked():
-            result = self.logic.get_average()
-            self.ui.text_result.setText(f"Average: {result:.2f}")
-            self.ui.label_status.setText("Average calculated.")
-        elif self.ui.radio_max.isChecked():
-            result = self.logic.get_max()
-            self.ui.text_result.setText(f"Max: {result}")
-            self.ui.label_status.setText("Maximum found.")
-
-    def activate_sort(self):
-        if self.ui.radio_sort.isChecked():
-            self.ui.combo_sort.setEnabled(True)
-            self.ui.label_status.setText("Sort selected. Choose order from combo box.")
-
-    def sort_numbers(self):
-        if not self.ui.radio_sort.isChecked():
-            return
-        order = self.ui.combo_sort.currentText()
-        ascending = (order == "Ascending")
-        sorted_nums = self.logic.get_sorted(ascending)
-        self.ui.text_result.setText(str(sorted_nums))
-        self.ui.label_status.setText(f"Sorted in {order.lower()} order.")
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainApp()
-    window.resize(600, 400)
-    window.show()
-    sys.exit(app.exec_())
+# Form implementation generated from reading ui file 'sort.ui'
+#
+# Created by: PyQt5 UI code generator 5.15.9
+#
+# WARNING: Any manual changes made to this file will be lost when pyuic5 is
+# run again.  Do not edit this file unless you know what you are doing.
 
 
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-# list_logic.py
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(509, 432)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName("gridLayout")
+        self.pushButton_GenerateNumbers = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_GenerateNumbers.setObjectName("pushButton_GenerateNumbers")
+        self.gridLayout.addWidget(self.pushButton_GenerateNumbers, 0, 0, 1, 5)
+        self.label = QtWidgets.QLabel(self.centralwidget)
+        self.label.setObjectName("label")
+        self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
+        self.textEdit_Numbers = QtWidgets.QTextEdit(self.centralwidget)
+        self.textEdit_Numbers.setObjectName("textEdit_Numbers")
+        self.gridLayout.addWidget(self.textEdit_Numbers, 2, 0, 1, 5)
+        self.radioButton_Max = QtWidgets.QRadioButton(self.centralwidget)
+        self.radioButton_Max.setObjectName("radioButton_Max")
+        self.gridLayout.addWidget(self.radioButton_Max, 3, 0, 1, 1)
+        self.radioButton_Min = QtWidgets.QRadioButton(self.centralwidget)
+        self.radioButton_Min.setObjectName("radioButton_Min")
+        self.gridLayout.addWidget(self.radioButton_Min, 3, 1, 1, 1)
+        self.radioButton_Sort = QtWidgets.QRadioButton(self.centralwidget)
+        self.radioButton_Sort.setObjectName("radioButton_Sort")
+        self.gridLayout.addWidget(self.radioButton_Sort, 3, 2, 1, 1)
+        self.comboBox = QtWidgets.QComboBox(self.centralwidget)
+        self.comboBox.setObjectName("comboBox")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.gridLayout.addWidget(self.comboBox, 3, 3, 1, 1)
+        self.radioButton_Reverse = QtWidgets.QRadioButton(self.centralwidget)
+        self.radioButton_Reverse.setObjectName("radioButton_Reverse")
+        self.gridLayout.addWidget(self.radioButton_Reverse, 3, 4, 1, 1)
+        self.label_2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_2.setObjectName("label_2")
+        self.gridLayout.addWidget(self.label_2, 4, 0, 1, 1)
+        self.textEdit_Result = QtWidgets.QTextEdit(self.centralwidget)
+        self.textEdit_Result.setObjectName("textEdit_Result")
+        self.gridLayout.addWidget(self.textEdit_Result, 5, 0, 1, 5)
+        self.label_3 = QtWidgets.QLabel(self.centralwidget)
+        self.label_3.setObjectName("label_3")
+        self.gridLayout.addWidget(self.label_3, 6, 0, 1, 1)
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 509, 26))
+        self.menubar.setObjectName("menubar")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
 
-import random
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-class ListOperations:
-    def __init__(self):
-        self.numbers = []
-
-    def generate_numbers(self, count=40, min_val=0, max_val=99):
-        self.numbers = [random.randint(min_val, max_val) for _ in range(count)]
-        return self.numbers
-
-    def get_sum(self):
-        return sum(self.numbers)
-
-    def get_average(self):
-        return sum(self.numbers) / len(self.numbers) if self.numbers else 0
-
-    def get_max(self):
-        return max(self.numbers) if self.numbers else None
-
-    def get_sorted(self, ascending=True):
-        return sorted(self.numbers, reverse=not ascending)
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.pushButton_GenerateNumbers.setText(_translate("MainWindow", "Generate Numbers"))
+        self.label.setText(_translate("MainWindow", "Numbers"))
+        self.radioButton_Max.setText(_translate("MainWindow", "Max"))
+        self.radioButton_Min.setText(_translate("MainWindow", "Min"))
+        self.radioButton_Sort.setText(_translate("MainWindow", "Sort"))
+        self.comboBox.setItemText(0, _translate("MainWindow", "Ascendic"))
+        self.comboBox.setItemText(1, _translate("MainWindow", "Descendic"))
+        self.radioButton_Reverse.setText(_translate("MainWindow", "Reverse"))
+        self.label_2.setText(_translate("MainWindow", "Results"))
+        self.label_3.setText(_translate("MainWindow", "Status"))
